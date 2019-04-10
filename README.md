@@ -1,4 +1,5 @@
-#Running the shiny application
+
+# Running the shiny application
 
 After having asked for a R session :
 
@@ -21,7 +22,7 @@ runGitHub("jsalt2019-diadet/diarization-to-tracking","<My git username>", subdir
 The needed enrollment.txt and trials.txt are stored on GitHub, so that you don't need them to run the application. 
 Otherwise, if you want so, you can follow the instructions in the next part.
 
-#Regenerating the speaker tracking task
+# Regenerating the speaker tracking task
 
 ## Requirements
 
