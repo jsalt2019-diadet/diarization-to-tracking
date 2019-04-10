@@ -26,14 +26,22 @@ Otherwise, if you want so, you can follow the instructions in the next part.
 
 ## Requirements
 
-**pyannote.core** and **pyannote.database**
+Clone this repo :
+
+```bash
+git clone https://github.com/jsalt2019-diadet/diarization-to-tracking.git
+cd diarization-to-tracking
+
+```
+
+Install dependencies (**pyannote.core** and **pyannote.database**) :
 
 ```bash
 conda create --name pyannote python=3.6
 pip install pyannote.core pyannote.database
 ```
 
-To get the necessary .rttm files :
+Download the necessary .rttm files :
 
 ```bash
 scp -r <username>@login.clsp.jhu.edu:/export/fs01/jsalt19/databases/rttm/* .
