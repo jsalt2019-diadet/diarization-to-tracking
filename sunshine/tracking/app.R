@@ -1,13 +1,7 @@
 library(shinydashboard)
 library(shiny)
-library(fontawesome)
 library(shinyWidgets)
 library(ggplot2)
-library(knitr)
-library(kableExtra)
-library(magrittr)
-library(dplyr)
-library(gridExtra)
 
 ui <- dashboardPage(
   dashboardHeader(title = "Speaker tracking"),
@@ -97,7 +91,7 @@ get_trials <- function(folder_path){
 
 plot_nb_enrollment_per_speaker <- function(enrollment,bbt=FALSE){
   if(bbt == TRUE){
-    fontsize=4
+    fontsize=1
   } else {
     fontsize=12
   }
@@ -114,7 +108,7 @@ plot_nb_enrollment_per_speaker <- function(enrollment,bbt=FALSE){
 
 plot_last_decile_enrollment_duration_per_speaker <- function(enrollment,bbt=FALSE){
   if(bbt == TRUE){
-    fontsize=4
+    fontsize=1
   } else {
     fontsize=12
   }
@@ -131,7 +125,7 @@ plot_last_decile_enrollment_duration_per_speaker <- function(enrollment,bbt=FALS
 
 plot_non_target_trials_per_speaker <- function(trials,bbt=FALSE){
   if(bbt == TRUE){
-    fontsize=4
+    fontsize=1
   } else {
     fontsize=12
   }
@@ -147,7 +141,7 @@ plot_non_target_trials_per_speaker <- function(trials,bbt=FALSE){
 
 plot_target_trials_per_speaker <- function(trials,bbt=FALSE){
   if(bbt == TRUE){
-    fontsize=4
+    fontsize=1
   } else {
     fontsize=12
   }
@@ -163,7 +157,7 @@ plot_target_trials_per_speaker <- function(trials,bbt=FALSE){
 
 plot_most_overlapping_trials <- function(trials,bbt=FALSE){
   if(bbt == TRUE){
-    fontsize=4
+    fontsize=1
   } else {
     fontsize=12
   }

@@ -45,7 +45,7 @@ def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrai
 
     rttm_files = utils.get_dev_test_rttm(folder_path)
 
-    full_text = "speaker\tmodel_number\tfilename\tonset\toffset\n"
+    full_text = ""
     cum_per_speaker = {}
 
     for rttm in rttm_files:
@@ -101,9 +101,10 @@ def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrai
 
     if babytrain:
         full_text = full_text.split('\n')
-        full_text = [line for line in full_text if line.split(' ')[0].startswith("!")]
+        full_text = [line for line in full_text if line.split('\t')[0].startswith("!")]
         full_text = '\n'.join(full_text)
 
+    full_text = "speaker\tmodel_number\tfilename\tonset\toffset\n" + full_text
     with open(os.path.join(folder_path, "enrollment.txt"), "w") as f:
         f.write(full_text[:-1])
 
