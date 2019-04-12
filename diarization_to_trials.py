@@ -59,6 +59,12 @@ def get_friends_per_speaker(rttm_files, BABYTRAIN):
                 else:
                     friends_per_speaker[speaker] |= set(speakers)
 
+    # Replace friends of investigators by empty set
+    if BABYTRAIN:
+        for k, v in friends_per_speaker.items():
+            if k.startswith("!INV"):
+                friends_per_speaker[k] = set()
+
     return friends_per_speaker
 
 
@@ -108,7 +114,6 @@ def main():
             if BABYTRAIN:
                 participants = [p for p in participants if p.startswith("!")]
             all_friends = get_friends_of_participants(friends_per_speaker, participants)
-
             last_offset = annotation.get_timeline()[-1][1]
 
             for end in range(DURATION_TRIAL, int(last_offset), DURATION_TRIAL):
@@ -127,14 +132,13 @@ def main():
                     trials_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
 
                 non_targets = list(set(all_friends) - set(targets))
-
                 # A speaker is defined as a non-target speaker for a chunk c,
                 # when he/she is not speaking in c, but speaks somewhere in whatever file
                 # where one of the target speaker is also participating
                 for non_target in non_targets:
                     trials_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
 
-    with open(os.path.join(DATABASE_PATH, "trials.txt"), "w") as f:
+    with open(os.path.join(DATABASE_PATH, "trials_%d.txt" % DURATION_TRIAL), "w") as f:
         f.write(trials_txt[:-1])
 
     print("trials.txt generated in %s" % DATABASE_PATH)

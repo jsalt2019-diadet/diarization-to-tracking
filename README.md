@@ -1,32 +1,13 @@
+If the application is running, you can connect to it on : 
 
-# Running the shiny application
+https://marvinlvn.shinyapps.io/tracking/
 
-After having asked for a R session :
-
-Firstly, install the possibly missing dependencies:
-
-```R
-install.packages('shinydashboard')
-install.packages('shiny')
-install.packages('shinyWidgets')
-install.packages('ggplot2')
-```
-
-Secondly, run the app :
-
-```R
-library('shiny')
-runGitHub("jsalt2019-diadet/diarization-to-tracking","<My git username>", subdir="sunshine/tracking")
-```
-
-The needed enrollment.txt and trials.txt are stored on GitHub, so that you don't need them to run the application. 
-Otherwise, if you want so, you can follow the instructions in the next part.
 
 # Regenerating the speaker tracking task
 
 ## Requirements
 
-Clone this repo :
+Clone the repo :
 
 ```bash
 git clone https://github.com/jsalt2019-diadet/diarization-to-tracking.git
