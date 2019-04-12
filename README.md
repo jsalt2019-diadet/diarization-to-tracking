@@ -34,12 +34,12 @@ where \<username\> needs to be replaced by your username on the JHU cluster.
 
 ```bash
 # Generate trials
-python diarization_to_trials.py babytrain_diarization/ --bbt
+python diarization_to_trials.py babytrain_diarization/ --bbt --cross-file
 python diarization_to_trials.py chime5_diarization/
 python diarization_to_trials.py ami_diarization/
 
 # Generate enrollment
-python diarization_to_enrollment.py babytrain_diarization/ --bbt
+python diarization_to_enrollment.py babytrain_diarization/ --bbt --cross-file
 python diarization_to_enrollment.py chime5_diarization/
 python diarization_to_enrollment.py ami_diarization/
 ```
