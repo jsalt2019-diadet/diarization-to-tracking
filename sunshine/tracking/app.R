@@ -52,12 +52,12 @@ ui <- dashboardPage(
                 box(plotOutput("scatter_babytrain", width=800))
               ),
               fluidRow(
-                h5("\t#NTT : Number of Target Trials\n", align="center"),
-                h5("\t#NNTT : Number of Non-Target Trials\n", align="center"),
-                h5("\tTSTT : average duration of the Total Speech of the Target in Trials\n", align="center"),
-                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Trials\n", align="center"),
+                h5("\t#NTT : Number of Target Tests\n", align="center"),
+                h5("\t#NNTT : Number of Non-Target Tests\n", align="center"),
+                h5("\tTSTT : average duration of the Total Speech of the Target in Tests\n", align="center"),
+                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Tests\n", align="center"),
                 h5("\tTSE : average duration of the Target Speech of the Target in Enrollments\n", align="center"),
-                h5("\t#E : number of enrollments\n", align="center")
+                h5("\t#E : number of Enrollments\n", align="center")
               )
       ),
       tabItem(tabName = "AMI",
@@ -92,12 +92,12 @@ ui <- dashboardPage(
                 column(width = 12, offset= 3, plotOutput("scatter_ami", width=800))
               ),
               fluidRow(
-                h5("\t#NTT : Number of Target Trials\n", align="center"),
-                h5("\t#NNTT : Number of Non-Target Trials\n", align="center"),
-                h5("\tTSTT : average duration of the Total Speech of the Target in Trials\n", align="center"),
-                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Trials\n", align="center"),
+                h5("\t#NTT : Number of Target Tests\n", align="center"),
+                h5("\t#NNTT : Number of Non-Target Tests\n", align="center"),
+                h5("\tTSTT : average duration of the Total Speech of the Target in Tests\n", align="center"),
+                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Tests\n", align="center"),
                 h5("\tTSE : average duration of the Target Speech of the Target in Enrollments\n", align="center"),
-                h5("\t#E : number of enrollments\n", align="center")
+                h5("\t#E : number of Enrollments\n", align="center")
               )
       ),
       tabItem(tabName = "CHiME5",
@@ -132,10 +132,10 @@ ui <- dashboardPage(
                 column(width = 12, offset= 3, plotOutput("scatter_chime5", width=800))
               ),
               fluidRow(
-                h5("\t#NTT : Number of Target Trials\n", align="center"),
-                h5("\t#NNTT : Number of Non-Target Trials\n", align="center"),
-                h5("\tTSTT : average duration of the Total Speech of the Target in Trials\n", align="center"),
-                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Trials\n", align="center"),
+                h5("\t#NTT : Number of Target Tests\n", align="center"),
+                h5("\t#NNTT : Number of Non-Target Tests\n", align="center"),
+                h5("\tTSTT : average duration of the Total Speech of the Target in Tests\n", align="center"),
+                h5("\tOSTT : average duration of the Overlapping Speech of the Target in Tests\n", align="center"),
                 h5("\tTSE : average duration of the Target Speech of the Target in Enrollments\n", align="center"),
                 h5("\t#E : number of Enrollments\n", align="center")
               )
@@ -180,8 +180,8 @@ plot_trials <- function(trials){
   
   p1 <- ggplot(data=non_target_trials,  mapping=aes(n)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
-    xlab("number of non-target trials") + ylab("number of speakers") +
-    ggtitle("Distribution of the number of non-target trials")
+    xlab("number of non-target test segments") + ylab("number of speakers") +
+    ggtitle("Distribution of the number of non-target test segments")
   
   # Distribution of the number of target trials
   target_trials = trials[trials["duration_total_speech"] != 0,]
@@ -189,43 +189,43 @@ plot_trials <- function(trials){
   
   p2 <- ggplot(data=nb_target_trials,  mapping=aes(n)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
-    xlab("number of target trials") + ylab("number of speakers") +
-    ggtitle("Distribution of the number of target trials")
+    xlab("number of target test segments") + ylab("number of speakers") +
+    ggtitle("Distribution of the number of target test segments")
   
   # Distribution of speech (overlapping+clean) (s)
   p3 <- ggplot(data=target_trials,  mapping=aes(duration_total_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
-    xlab("Duration (s)") + ylab("number of target trials") +
-    ggtitle("Distribution of the amount of speech (overlapping+clean) in target trials")
+    xlab("Duration (s)") + ylab("number of target test segments") +
+    ggtitle("Distribution of the amount of speech (overlapping+clean) in target test segments")
   
   # Distribution of overlapping speech duration (s)
   p4 <- ggplot(data=target_trials,  mapping=aes(duration_overlapping_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     #geom_histogram(color='brown', fill='red', mapping = aes(duration_clean_speech)) +
-    xlab("Duration (s)") + ylab("number of target trials") +
-    ggtitle("Distribution of the amount of overlapping speech in target trials")
+    xlab("Duration (s)") + ylab("number of target test segments") +
+    ggtitle("Distribution of the amount of overlapping speech (in s) in target test segments")
   
   # Distribution of overlapping speech duration (%)
   target_trials["duration_overlapping_percent"] = target_trials["duration_overlapping_speech"] * 100 / target_trials["duration_total_speech"]
   p5 <- ggplot(data=target_trials,  mapping=aes(duration_overlapping_percent)) +
     geom_histogram(color='brown', fill='cadetblue', bins=50, closed = "left", boundary=0) +
     #geom_histogram(color='brown', fill='red', mapping = aes(duration_clean_speech)) +
-    xlab("Duration (s)") + ylab("number of target trials") +
-    ggtitle("Distribution of the amount of overlapping speech in target trials")
+    xlab("Duration (%)") + ylab("number of target test segments") +
+    ggtitle("Distribution of the amount of overlapping speech (in %) in target test segments")
   
   # Distribution of clean speech duration (s)
   target_trials["duration_clean_speech"] = target_trials["duration_total_speech"] - target_trials["duration_overlapping_speech"]
   p6 <- ggplot(data=target_trials,  mapping=aes(duration_clean_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
-    xlab("Duration (s)") + ylab("number of target trials") +
-    ggtitle("Distribution of the amount of clean speech in target trials")
+    xlab("Duration (s)") + ylab("number of target test segments") +
+    ggtitle("Distribution of the amount of clean speech (in s) in target test segments")
   
   # Distribution of clean speech duration (%)
   target_trials["duration_clean_percent"] = target_trials["duration_clean_speech"] * 100 / target_trials["duration_total_speech"]
   p7 <- ggplot(data=target_trials,  mapping=aes(duration_clean_percent)) +
     geom_histogram(color='brown', fill='cadetblue', bins=50, closed = "left", boundary=0) +
-    xlab("Duration (s)") + ylab("number of target trials") +
-    ggtitle("Distribution of the amount of clean speech in target trials")
+    xlab("Duration (%)") + ylab("number of target test segments") +
+    ggtitle("Distribution of the amount of clean speech (in %) in target test segments")
   
   return(list("p1" = p1, "p2" = p2, "p3" = p3,
               "p4" = p4, "p5" = p5, "p6" = p6,
@@ -292,8 +292,8 @@ server <- function(input, output) {
   output$enrollment1_ami = renderPlot({enrollment_plots()$p1})
   output$enrollment2_ami = renderPlot({enrollment_plots()$p2})
   
-  output$nb_non_target_trials_ami <- renderText({paste("Number of non-target trials : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_ami <- renderText({paste("Number of target trials : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_trials_ami <- renderText({paste("Number of non-target test segments : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] == 0,]))})
+  output$nb_target_trials_ami <- renderText({paste("Number of target test segments : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] != 0,]))})
   
   output$trial1_ami <- renderPlot({trial_plots()$p1})
   output$trial2_ami <- renderPlot({trial_plots()$p2})
@@ -324,8 +324,8 @@ server <- function(input, output) {
   output$enrollment1_chime5 = renderPlot({chime5_enrollment_plots()$p1})
   output$enrollment2_chime5 = renderPlot({chime5_enrollment_plots()$p2})
   
-  output$nb_non_target_trials_chime5 <- renderText({paste("Number of non-target trials : " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_chime5 <- renderText({paste("Number of target trials : " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_trials_chime5 <- renderText({paste("Number of non-target test segments: " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] == 0,]))})
+  output$nb_target_trials_chime5 <- renderText({paste("Number of target test segments : " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] != 0,]))})
   
   output$trial1_chime5 <- renderPlot({chime5_trial_plots()$p1})
   output$trial2_chime5 <- renderPlot({chime5_trial_plots()$p2})
@@ -357,8 +357,8 @@ server <- function(input, output) {
   output$enrollment1_babytrain = renderPlot({babytrain_enrollment_plots()$p1})
   output$enrollment2_babytrain = renderPlot({babytrain_enrollment_plots()$p2})
   
-  output$nb_non_target_trials_babytrain <- renderText({paste("Number of non-target trials : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_babytrain <- renderText({paste("Number of target trials : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_trials_babytrain <- renderText({paste("Number of non-target test segments : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] == 0,]))})
+  output$nb_target_trials_babytrain <- renderText({paste("Number of target test segments : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] != 0,]))})
   
   output$trial1_babytrain <- renderPlot({babytrain_trial_plots()$p1})
   output$trial2_babytrain <- renderPlot({babytrain_trial_plots()$p2})
