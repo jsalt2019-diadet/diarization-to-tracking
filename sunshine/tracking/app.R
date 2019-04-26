@@ -32,8 +32,8 @@ ui <- dashboardPage(
               # fluidRow(
               #   column(width = 12, align = "center", sliderTextInput(inputId = "trial_dur", label = "Trial duration (in seconds):", choices = c(5,10,15,20,25,30,45,50,55,60)))
               # ),
-              titlePanel("Trials"),
-              fluidRow(column(width = 6, textOutput("nb_non_target_trials_babytrain")), column(width = 6, textOutput("nb_target_trials_babytrain"))),
+              titlePanel("test_segments"),
+              fluidRow(column(width = 6, textOutput("nb_non_target_test_segments_babytrain")), column(width = 6, textOutput("nb_target_test_segments_babytrain"))),
               fluidRow(
                 box(plotOutput("trial1_babytrain",height=400)),
                 box(plotOutput("trial2_babytrain",height=400))
@@ -72,8 +72,8 @@ ui <- dashboardPage(
               # fluidRow(
               #   column(width = 12, align = "center", sliderTextInput(inputId = "trial_dur", label = "Trial duration (in seconds):", choices = c(5,10,15,20,25,30,45,50,55,60)))
               # ),
-              titlePanel("Trials"),
-              fluidRow(column(width = 6, textOutput("nb_non_target_trials_ami")), column(width = 6, textOutput("nb_target_trials_ami"))),
+              titlePanel("test_segments"),
+              fluidRow(column(width = 6, textOutput("nb_non_target_test_segments_ami")), column(width = 6, textOutput("nb_target_test_segments_ami"))),
               fluidRow(
                 box(plotOutput("trial1_ami",height=400)),
                 box(plotOutput("trial2_ami",height=400))
@@ -112,8 +112,8 @@ ui <- dashboardPage(
               # fluidRow(
               #   column(width = 12, align = "center", sliderTextInput(inputId = "trial_dur", label = "Trial duration (in seconds):", choices = c(5,10,15,20,25,30,45,50,55,60)))
               # ),
-              titlePanel("Trials"),
-              fluidRow(column(width = 6, textOutput("nb_non_target_trials_chime5")), column(width = 6, textOutput("nb_target_trials_chime5"))),
+              titlePanel("test_segments"),
+              fluidRow(column(width = 6, textOutput("nb_non_target_test_segments_chime5")), column(width = 6, textOutput("nb_target_test_segments_chime5"))),
               fluidRow(
                 box(plotOutput("trial1_chime5",height=400)),
                 box(plotOutput("trial2_chime5",height=400))
@@ -150,9 +150,9 @@ get_enrollment <- function(folder_path, enrollment_duration){
   return(enrollment)
 }
 
-get_trials <- function(folder_path, trial_duration=60){
-  trials = read.table(file.path(folder_path, paste("trials_", trial_duration, ".txt", sep="")), header = TRUE, sep = "\t", dec = ".")
-  return(trials)
+get_test_segments <- function(folder_path, trial_duration=60){
+  test_segments = read.table(file.path(folder_path, paste("test_segments_", trial_duration, ".txt", sep="")), header = TRUE, sep = "\t", dec = ".")
+  return(test_segments)
 }
 
 plot_enrollment <- function(enrollment){
@@ -173,56 +173,56 @@ plot_enrollment <- function(enrollment){
   return(list("p1" = p1, "p2" = p2))
 }
 
-plot_trials <- function(trials){
-  # Distribution of the number of non-target trials
-  non_target_trials = trials[trials["duration_total_speech"] == 0,]
-  non_target_trials = count(non_target_trials, target_speaker)
+plot_test_segments <- function(test_segments){
+  # Distribution of the number of non-target test_segments
+  non_target_test_segments = test_segments[test_segments["duration_total_speech"] == 0,]
+  non_target_test_segments = count(non_target_test_segments, target_speaker)
   
-  p1 <- ggplot(data=non_target_trials,  mapping=aes(n)) +
+  p1 <- ggplot(data=non_target_test_segments,  mapping=aes(n)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     xlab("number of non-target test segments") + ylab("number of speakers") +
     ggtitle("Distribution of the number of non-target test segments")
   
-  # Distribution of the number of target trials
-  target_trials = trials[trials["duration_total_speech"] != 0,]
-  nb_target_trials = count(target_trials, target_speaker)
+  # Distribution of the number of target test_segments
+  target_test_segments = test_segments[test_segments["duration_total_speech"] != 0,]
+  nb_target_test_segments = count(target_test_segments, target_speaker)
   
-  p2 <- ggplot(data=nb_target_trials,  mapping=aes(n)) +
+  p2 <- ggplot(data=nb_target_test_segments,  mapping=aes(n)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     xlab("number of target test segments") + ylab("number of speakers") +
     ggtitle("Distribution of the number of target test segments")
   
   # Distribution of speech (overlapping+clean) (s)
-  p3 <- ggplot(data=target_trials,  mapping=aes(duration_total_speech)) +
+  p3 <- ggplot(data=target_test_segments,  mapping=aes(duration_total_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     xlab("Duration (s)") + ylab("number of target test segments") +
     ggtitle("Distribution of the amount of speech (overlapping+clean) in target test segments")
   
   # Distribution of overlapping speech duration (s)
-  p4 <- ggplot(data=target_trials,  mapping=aes(duration_overlapping_speech)) +
+  p4 <- ggplot(data=target_test_segments,  mapping=aes(duration_overlapping_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     #geom_histogram(color='brown', fill='red', mapping = aes(duration_clean_speech)) +
     xlab("Duration (s)") + ylab("number of target test segments") +
     ggtitle("Distribution of the amount of overlapping speech (in s) in target test segments")
   
   # Distribution of overlapping speech duration (%)
-  target_trials["duration_overlapping_percent"] = target_trials["duration_overlapping_speech"] * 100 / target_trials["duration_total_speech"]
-  p5 <- ggplot(data=target_trials,  mapping=aes(duration_overlapping_percent)) +
+  target_test_segments["duration_overlapping_percent"] = target_test_segments["duration_overlapping_speech"] * 100 / target_test_segments["duration_total_speech"]
+  p5 <- ggplot(data=target_test_segments,  mapping=aes(duration_overlapping_percent)) +
     geom_histogram(color='brown', fill='cadetblue', bins=50, closed = "left", boundary=0) +
     #geom_histogram(color='brown', fill='red', mapping = aes(duration_clean_speech)) +
     xlab("Duration (%)") + ylab("number of target test segments") +
     ggtitle("Distribution of the amount of overlapping speech (in %) in target test segments")
   
   # Distribution of clean speech duration (s)
-  target_trials["duration_clean_speech"] = target_trials["duration_total_speech"] - target_trials["duration_overlapping_speech"]
-  p6 <- ggplot(data=target_trials,  mapping=aes(duration_clean_speech)) +
+  target_test_segments["duration_clean_speech"] = target_test_segments["duration_total_speech"] - target_test_segments["duration_overlapping_speech"]
+  p6 <- ggplot(data=target_test_segments,  mapping=aes(duration_clean_speech)) +
     geom_histogram(color='brown', fill='cadetblue',bins=50, closed = "left", boundary=0) +
     xlab("Duration (s)") + ylab("number of target test segments") +
     ggtitle("Distribution of the amount of clean speech (in s) in target test segments")
   
   # Distribution of clean speech duration (%)
-  target_trials["duration_clean_percent"] = target_trials["duration_clean_speech"] * 100 / target_trials["duration_total_speech"]
-  p7 <- ggplot(data=target_trials,  mapping=aes(duration_clean_percent)) +
+  target_test_segments["duration_clean_percent"] = target_test_segments["duration_clean_speech"] * 100 / target_test_segments["duration_total_speech"]
+  p7 <- ggplot(data=target_test_segments,  mapping=aes(duration_clean_percent)) +
     geom_histogram(color='brown', fill='cadetblue', bins=50, closed = "left", boundary=0) +
     xlab("Duration (%)") + ylab("number of target test segments") +
     ggtitle("Distribution of the amount of clean speech (in %) in target test segments")
@@ -232,18 +232,18 @@ plot_trials <- function(trials){
               "p7" = p7))
 }
 
-plot_scatter <- function(trials, enrollment, bbt=FALSE){
+plot_scatter <- function(test_segments, enrollment, bbt=FALSE){
   # At the file scale
-  # Let's compute number of target trials vs number of non-target trials
-  trials[c("target","non_target")] = 0
-  trials[trials["duration_total_speech"] != 0,"target"] = 1
-  trials[trials["duration_total_speech"] == 0,"non_target"] = 1
-  nb_trials = aggregate(.~file_basename, trials, sum)[c("file_basename", "target", "non_target")]
-  colnames(nb_trials) = c("filename", "number_target_trials", "number_non_target_trials")
+  # Let's compute number of target test_segments vs number of non-target test_segments
+  test_segments[c("target","non_target")] = 0
+  test_segments[test_segments["duration_total_speech"] != 0,"target"] = 1
+  test_segments[test_segments["duration_total_speech"] == 0,"non_target"] = 1
+  nb_test_segments = aggregate(.~filename, test_segments, sum)[c("filename", "target", "non_target")]
+  colnames(nb_test_segments) = c("filename", "number_target_test_segments", "number_non_target_test_segments")
   
   # The average duration of total speech and overlapping speech
-  average_duration_tri = aggregate(.~file_basename, trials, mean)[c("file_basename", "duration_total_speech", "duration_overlapping_speech")]
-  colnames(average_duration_tri) = c("filename", "average_duration_total_speech_trials", "average_duration_clean_speech_trials")
+  average_duration_tri = aggregate(.~filename, test_segments, mean)[c("filename", "duration_total_speech", "duration_overlapping_speech")]
+  colnames(average_duration_tri) = c("filename", "average_duration_total_speech_test_segments", "average_duration_clean_speech_test_segments")
   
   # The average duration of speech in enrollment for the target speaker
   aggregated_enrollment = aggregate(duration~filename+model_number+speaker, enrollment, sum)
@@ -254,7 +254,7 @@ plot_scatter <- function(trials, enrollment, bbt=FALSE){
   nb_enr = aggregate(model_number~filename,aggregated_enrollment, length)
   colnames(nb_enr) = c("filename", "number_enrollments")
   
-  scatter = merge(nb_trials, average_duration_tri, by="filename")
+  scatter = merge(nb_test_segments, average_duration_tri, by="filename")
   scatter = merge(scatter, avg_duration_enr, by="filename")
   scatter = merge(scatter, nb_enr, by="filename")
   colnames(scatter) = c("filename", "#NTT", "#NNTT", "TSTT", "OSTT", "TSE", "#E")
@@ -275,8 +275,8 @@ server <- function(input, output) {
   
   # AMI
   ami_path = "data/ami"
-  ami_trials = reactive({
-    get_trials(ami_path)
+  ami_test_segments = reactive({
+    get_test_segments(ami_path)
   })
   ami_enrollment = reactive({
     get_enrollment(ami_path, enrollment_duration_ami())
@@ -286,14 +286,14 @@ server <- function(input, output) {
     plot_enrollment(ami_enrollment())
   })
   trial_plots = reactive({
-    plot_trials(ami_trials())
+    plot_test_segments(ami_test_segments())
   })
   
   output$enrollment1_ami = renderPlot({enrollment_plots()$p1})
   output$enrollment2_ami = renderPlot({enrollment_plots()$p2})
   
-  output$nb_non_target_trials_ami <- renderText({paste("Number of non-target test segments : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_ami <- renderText({paste("Number of target test segments : " , nrow(ami_trials()[ami_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_test_segments_ami <- renderText({paste("Number of non-target test segments : " , nrow(ami_test_segments()[ami_test_segments()["duration_total_speech"] == 0,]))})
+  output$nb_target_test_segments_ami <- renderText({paste("Number of target test segments : " , nrow(ami_test_segments()[ami_test_segments()["duration_total_speech"] != 0,]))})
   
   output$trial1_ami <- renderPlot({trial_plots()$p1})
   output$trial2_ami <- renderPlot({trial_plots()$p2})
@@ -303,12 +303,12 @@ server <- function(input, output) {
   output$trial6_ami <- renderPlot({trial_plots()$p6})
   output$trial7_ami <- renderPlot({trial_plots()$p7})
   
-  output$scatter_ami <- renderPlot({plot_scatter(ami_trials(), ami_enrollment())})
+  output$scatter_ami <- renderPlot({plot_scatter(ami_test_segments(), ami_enrollment())})
   
   # CHiME5
   chime5_path = "data/chime5"
-  chime5_trials = reactive({
-    get_trials(chime5_path)
+  chime5_test_segments = reactive({
+    get_test_segments(chime5_path)
   })
   chime5_enrollment = reactive({
     get_enrollment(chime5_path, enrollment_duration_chime5())
@@ -318,14 +318,14 @@ server <- function(input, output) {
     plot_enrollment(chime5_enrollment())
   })
   chime5_trial_plots = reactive({
-    plot_trials(chime5_trials())
+    plot_test_segments(chime5_test_segments())
   })
   
   output$enrollment1_chime5 = renderPlot({chime5_enrollment_plots()$p1})
   output$enrollment2_chime5 = renderPlot({chime5_enrollment_plots()$p2})
   
-  output$nb_non_target_trials_chime5 <- renderText({paste("Number of non-target test segments: " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_chime5 <- renderText({paste("Number of target test segments : " , nrow(chime5_trials()[chime5_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_test_segments_chime5 <- renderText({paste("Number of non-target test segments: " , nrow(chime5_test_segments()[chime5_test_segments()["duration_total_speech"] == 0,]))})
+  output$nb_target_test_segments_chime5 <- renderText({paste("Number of target test segments : " , nrow(chime5_test_segments()[chime5_test_segments()["duration_total_speech"] != 0,]))})
   
   output$trial1_chime5 <- renderPlot({chime5_trial_plots()$p1})
   output$trial2_chime5 <- renderPlot({chime5_trial_plots()$p2})
@@ -336,12 +336,12 @@ server <- function(input, output) {
   output$trial7_chime5 <- renderPlot({chime5_trial_plots()$p7})
   
   
-  output$scatter_chime5 <- renderPlot({plot_scatter(chime5_trials(), chime5_enrollment())})
+  output$scatter_chime5 <- renderPlot({plot_scatter(chime5_test_segments(), chime5_enrollment())})
   
   # babytrain
   babytrain_path = "data/babytrain"
-  babytrain_trials = reactive({
-    get_trials(babytrain_path)
+  babytrain_test_segments = reactive({
+    get_test_segments(babytrain_path)
   })
   babytrain_enrollment = reactive({
     get_enrollment(babytrain_path, enrollment_duration_bbt())
@@ -351,14 +351,14 @@ server <- function(input, output) {
     plot_enrollment(babytrain_enrollment())
   })
   babytrain_trial_plots = reactive({
-    plot_trials(babytrain_trials())
+    plot_test_segments(babytrain_test_segments())
   })
 
   output$enrollment1_babytrain = renderPlot({babytrain_enrollment_plots()$p1})
   output$enrollment2_babytrain = renderPlot({babytrain_enrollment_plots()$p2})
   
-  output$nb_non_target_trials_babytrain <- renderText({paste("Number of non-target test segments : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] == 0,]))})
-  output$nb_target_trials_babytrain <- renderText({paste("Number of target test segments : " , nrow(babytrain_trials()[babytrain_trials()["duration_total_speech"] != 0,]))})
+  output$nb_non_target_test_segments_babytrain <- renderText({paste("Number of non-target test segments : " , nrow(babytrain_test_segments()[babytrain_test_segments()["duration_total_speech"] == 0,]))})
+  output$nb_target_test_segments_babytrain <- renderText({paste("Number of target test segments : " , nrow(babytrain_test_segments()[babytrain_test_segments()["duration_total_speech"] != 0,]))})
   
   output$trial1_babytrain <- renderPlot({babytrain_trial_plots()$p1})
   output$trial2_babytrain <- renderPlot({babytrain_trial_plots()$p2})
@@ -368,7 +368,7 @@ server <- function(input, output) {
   output$trial6_babytrain <- renderPlot({babytrain_trial_plots()$p6})
   output$trial7_babytrain <- renderPlot({babytrain_trial_plots()$p7})
   
-  output$scatter_babytrain <- renderPlot({plot_scatter(babytrain_trials(), babytrain_enrollment(), bbt=TRUE)})
+  output$scatter_babytrain <- renderPlot({plot_scatter(babytrain_test_segments(), babytrain_enrollment(), bbt=TRUE)})
 }
 
 shinyApp(ui, server)

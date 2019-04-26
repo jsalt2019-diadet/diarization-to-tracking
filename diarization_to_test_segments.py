@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Usage: python diarization_to_trials.py <path> [-d DURATION] [--bbt BABYTRAIN]
+"""Usage: python diarization_to_test_segments.py <path> [-d DURATION] [--bbt BABYTRAIN]
 
 Arguments:
                         folder path containing train, dev and test folders,
                         themselves containing a gold folder containing .rttm files
 
 Options:
-    -d DURATION         duration of a trial (in seconds) [default: 60]
+    -d DURATION         duration of a test segment (in seconds) [default: 60]
     --bbt BABYTRAIN     indicates if the folder that needs to be treated is BabyTrain.
                         if True, skip all the speakers whose name does NOT start by !
 
 Use case:
-    python diarization_to_trials.py ami_diarization > ami_diarization/trials.txt
-    python diarization_to_trials.py chime5_diarization > chime5_diarization/trials.txt
-    python diarization_to_trials.py babytrain_diarization --bbt > babytrain_diarization/trials.txt
+    python diarization_to_test_segments.py ami_diarization
+    python diarization_to_test_segments.py chime5_diarization
+    python diarization_to_test_segments.py babytrain_diarization --bbt
 
 Requirements:
     pyannote.database
@@ -83,21 +83,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="Relative path to the database folder, containing"# Positional Argument
                                               "train, dev, and test sub-folders.")
-    parser.add_argument("-d", "--duration", type=int, default=60, help="Duration of a trial. (Default to 60 seconds)")
+    parser.add_argument("-d", "--duration", type=int, default=60, help="Duration of a test segment. (Default to 60 seconds)")
 
     parser.add_argument('--bbt', action='store_true', help="Indicates whether the corpora is BabyTrain or not. If true,"
                                                            "skip all the speakers whose name doesn't start by '!'.")
     args = parser.parse_args()
 
     # Parameters
-    DURATION_TRIAL = args.duration
+    DURATION_TEST = args.duration
     DATABASE_PATH = os.path.join(os.getcwd(), args.path)  # needs to loop through dev and test
     BABYTRAIN = args.bbt
 
     # Header
-    trials_txt = "target_speaker\tfile_basename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
+    test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
 
-    # Extract target and non-target trials
+    # Extract target and non-target test_segments
     rttm_files = utils.get_dev_test_rttm(DATABASE_PATH)
 
     ## First, get the dictionnary of every friends of every speakers.
@@ -116,8 +116,8 @@ def main():
             all_friends = get_friends_of_participants(friends_per_speaker, participants)
             last_offset = annotation.get_timeline()[-1][1]
 
-            for end in range(DURATION_TRIAL, int(last_offset), DURATION_TRIAL):
-                beg = end - DURATION_TRIAL
+            for end in range(DURATION_TEST, int(last_offset), DURATION_TEST):
+                beg = end - DURATION_TEST
                 chunk = annotation.crop(Segment(beg, end))
                 targets = chunk.labels()
 
@@ -129,19 +129,19 @@ def main():
                 for target in targets:
                     tot_speech = chunk.label_duration(target)
                     overlapping_speech = overlapping_chunk.label_duration(target)
-                    trials_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
+                    test_segments_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
 
                 non_targets = list(set(all_friends) - set(targets))
                 # A speaker is defined as a non-target speaker for a chunk c,
                 # when he/she is not speaking in c, but speaks somewhere in whatever file
                 # where one of the target speaker is also participating
                 for non_target in non_targets:
-                    trials_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
+                    test_segments_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
 
-    with open(os.path.join(DATABASE_PATH, "trials_%d.txt" % DURATION_TRIAL), "w") as f:
-        f.write(trials_txt[:-1])
+    with open(os.path.join(DATABASE_PATH, "test_segments_%d.txt" % DURATION_TEST), "w") as f:
+        f.write(test_segments_txt[:-1])
 
-    print("trials.txt generated in %s" % DATABASE_PATH)
+    print("test_segments.txt generated in %s" % DATABASE_PATH)
 
 
 if __name__ == '__main__':

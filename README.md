@@ -33,10 +33,10 @@ where \<username\> needs to be replaced by your username on the JHU cluster.
 ## Commands
 
 ```bash
-# Generate trials
-python diarization_to_trials.py babytrain_diarization/ --bbt --cross-file
-python diarization_to_trials.py chime5_diarization/
-python diarization_to_trials.py ami_diarization/
+# Generate test
+python diarization_to_test_segments.py babytrain_diarization/ --bbt --cross-file
+python diarization_to_test_segments.py chime5_diarization/
+python diarization_to_test_segments.py ami_diarization/
 
 # Generate enrollment
 python diarization_to_enrollment.py babytrain_diarization/ --bbt --cross-file
@@ -53,6 +53,6 @@ If you want to change the duration, you can add **-d** followed by the duration 
 # To generate 15 seconds long enrollment (default to 30 seconds)
 python diarization_to_enrollment.py chime5_diarization/ -d 15
 
-# To generate 2 mn long trials (default to 60 seconds)
+# To generate 2 mn long test_segments (default to 60 seconds)
 python diarization_to_enrollment.py chime5_diarization/ -d 120
 ```

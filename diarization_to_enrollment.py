@@ -113,9 +113,8 @@ def main(args):
     cross_file = args["--cross-file"]
     babytrain = args["--bbt"]
     min_dur = int(args['-d'])
-
     generate_enrollment(folder, min_dur, cross_file, babytrain)
-    print("enrollment.txt generated in %s" % folder)
+    print("enrollment_%d.txt generated in %s" % (min_dur, folder))
 
 
 if __name__ == '__main__':
