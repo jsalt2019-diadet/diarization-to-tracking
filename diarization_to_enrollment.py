@@ -17,7 +17,6 @@ Use case:
     python diarization_to_enrollment.py babytrain_diarization --bbt --cross-file
     python diarization_to_enrollment.py ami_diarization
     python diarization_to_enrollment.py chime5_diarization
-
 """
 
 import os
@@ -25,7 +24,7 @@ from docopt import docopt
 from utils import utils
 
 
-def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrain=False):
+def generate_enrollment(folder_path, fold, min_duration=30, cross_file=False, babytrain=False):
     """Generates enrolment file from rttm files folder
 
     Parameters
@@ -43,7 +42,7 @@ def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrai
             cum_per_speaker[k] = [0.0, "", model_number]
         return cum_per_speaker
 
-    rttm_files = utils.get_dev_test_rttm(folder_path)
+    rttm_files = utils.get_rttm(folder_path, fold)
 
     full_text = ""
     cum_per_speaker = {}
@@ -81,13 +80,15 @@ def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrai
                     # |--------|
                     #    |--------|
                     if start-prev_start > 0:
-                        cum_per_speaker[prev_speaker][0] += start-prev_start
-                        cum_per_speaker[prev_speaker][1] += f"{prev_speaker}\t{model_number}\t{basename}\t{prev_start}\t{start}\n"
+                        # Uncomment these 2 lines for taking into account clean part of overlapping speech
+
+                        # cum_per_speaker[prev_speaker][0] += start-prev_start
+                        # cum_per_speaker[prev_speaker][1] += f"{prev_speaker}\t{model_number}\t{basename}\t{prev_start}\t{start}\n"
+
                         # In that case, we need to update the current speech utterrance
                         start = prev_end
                         if start > end:
                             end = start
-
 
                 # If we have enough speech, we got an enrollment for prev_speaker
                 if cum_per_speaker[prev_speaker][0] >= min_duration:
@@ -105,16 +106,19 @@ def generate_enrollment(folder_path, min_duration=30, cross_file=False, babytrai
         full_text = '\n'.join(full_text)
 
     full_text = "speaker\tmodel_number\tfilename\tonset\toffset\n" + full_text
-    with open(os.path.join(folder_path, "enrollment_%d.txt" % min_duration), "w") as f:
+    with open(os.path.join(folder_path, "%s_enrollments_%d.txt" % (fold, min_duration)), "w") as f:
         f.write(full_text[:-1])
+
 
 def main(args):
     folder = args["<path>"]
     cross_file = args["--cross-file"]
     babytrain = args["--bbt"]
     min_dur = int(args['-d'])
-    generate_enrollment(folder, min_dur, cross_file, babytrain)
-    print("enrollment_%d.txt generated in %s" % (min_dur, folder))
+
+    for fold in ["train", "dev", "test"]:
+        generate_enrollment(folder, fold, min_dur, cross_file, babytrain)
+        print("%s_enrollments_%d.txt generated in %s" % (fold, min_dur, folder))
 
 
 if __name__ == '__main__':

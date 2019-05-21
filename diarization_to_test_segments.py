@@ -78,7 +78,6 @@ def get_friends_of_participants(friends_per_speaker, list_of_speakers):
         all_friends |= friends_per_speaker[speaker]
     return all_friends
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str, help="Relative path to the database folder, containing"# Positional Argument
@@ -97,51 +96,52 @@ def main():
     # Header
     test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
 
-    # Extract target and non-target test_segments
-    rttm_files = utils.get_dev_test_rttm(DATABASE_PATH)
+    for fold in ["train", "dev", "test"]:
+        # Extract target and non-target test_segments
+        rttm_files = utils.get_rttm(DATABASE_PATH, fold)
 
-    ## First, get the dictionnary of every friends of every speakers.
-    friends_per_speaker = get_friends_per_speaker(rttm_files, BABYTRAIN)
+        ## First, get the dictionnary of every friends of every speakers.
+        friends_per_speaker = get_friends_per_speaker(rttm_files, BABYTRAIN)
 
-    for rttm in rttm_files:
-        basename = os.path.splitext(os.path.basename(rttm))[0]
-        data = pyda.load_rttm(rttm)
+        for rttm in rttm_files:
+            basename = os.path.splitext(os.path.basename(rttm))[0]
+            data = pyda.load_rttm(rttm)
 
-        if data != {}:
-            annotation = data[basename]
+            if data != {}:
+                annotation = data[basename]
 
-            participants = annotation.labels()
-            if BABYTRAIN:
-                participants = [p for p in participants if p.startswith("!")]
-            all_friends = get_friends_of_participants(friends_per_speaker, participants)
-            last_offset = annotation.get_timeline()[-1][1]
-
-            for end in range(DURATION_TEST, int(last_offset), DURATION_TEST):
-                beg = end - DURATION_TEST
-                chunk = annotation.crop(Segment(beg, end))
-                targets = chunk.labels()
-
+                participants = annotation.labels()
                 if BABYTRAIN:
-                    targets = [t for t in targets if t.startswith("!")]
-                overlapping_chunk = utils.overlapping_annotation(chunk)
-                # A speaker is defined as a target speaker for a chunk c,
-                # when he/she is speaking in c.
-                for target in targets:
-                    tot_speech = chunk.label_duration(target)
-                    overlapping_speech = overlapping_chunk.label_duration(target)
-                    test_segments_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
+                    participants = [p for p in participants if p.startswith("!")]
+                all_friends = get_friends_of_participants(friends_per_speaker, participants)
+                last_offset = annotation.get_timeline()[-1][1]
 
-                non_targets = list(set(all_friends) - set(targets))
-                # A speaker is defined as a non-target speaker for a chunk c,
-                # when he/she is not speaking in c, but speaks somewhere in whatever file
-                # where one of the target speaker is also participating
-                for non_target in non_targets:
-                    test_segments_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
+                for end in range(DURATION_TEST, int(last_offset), DURATION_TEST):
+                    beg = end - DURATION_TEST
+                    chunk = annotation.crop(Segment(beg, end))
+                    targets = chunk.labels()
 
-    with open(os.path.join(DATABASE_PATH, "test_segments_%d.txt" % DURATION_TEST), "w") as f:
-        f.write(test_segments_txt[:-1])
+                    if BABYTRAIN:
+                        targets = [t for t in targets if t.startswith("!")]
+                    overlapping_chunk = utils.overlapping_annotation(chunk)
+                    # A speaker is defined as a target speaker for a chunk c,
+                    # when he/she is speaking in c.
+                    for target in targets:
+                        tot_speech = chunk.label_duration(target)
+                        overlapping_speech = overlapping_chunk.label_duration(target)
+                        test_segments_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
 
-    print("test_segments.txt generated in %s" % DATABASE_PATH)
+                    non_targets = list(set(all_friends) - set(targets))
+                    # A speaker is defined as a non-target speaker for a chunk c,
+                    # when he/she is not speaking in c, but speaks somewhere in whatever file
+                    # where one of the target speaker is also participating
+                    for non_target in non_targets:
+                        test_segments_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
+
+        with open(os.path.join(DATABASE_PATH, "%s_test_segments_%d.txt" % (fold, DURATION_TEST)), "w") as f:
+            f.write(test_segments_txt[:-1])
+
+        print("%s_test_segments_%d.txt generated in %s" % (fold, DURATION_TEST, DATABASE_PATH))
 
 
 if __name__ == '__main__':
