@@ -106,7 +106,7 @@ def generate_enrollment(folder_path, fold, min_duration=30, cross_file=False, ba
         full_text = '\n'.join(full_text)
 
     full_text = "speaker\tmodel_number\tfilename\tonset\toffset\n" + full_text
-    with open(os.path.join(folder_path, "%s_enrollments_%d.txt" % (fold, min_duration)), "w") as f:
+    with open(os.path.join(folder_path, fold, "%s_enrollments_%d.txt" % (fold, min_duration)), "w") as f:
         f.write(full_text[:-1])
 
 

@@ -5,9 +5,9 @@ import os
 
 """
 Use case :
-python pairing_enrollment_test.py --enrollments ami_diarization/dev_enrollments_30.txt --test_segments ami_diarization/dev_test_segments_60.txt -s 0 -m 1 --sep .
-python pairing_enrollment_test.py --enrollments chime5_diarization/dev_enrollments_30.txt --test_segments chime5_diarization/dev_test_segments_60.txt -s 0 -m 1 --sep _
-python pairing_enrollment_test.py --enrollments babytrain_diarization/dev_enrollments_30.txt --test_segments babytrain_diarization/dev_test_segments_120.txt
+python pairing_enrollment_test.py --enrollments ami_diarization/dev/dev_enrollments_30.txt --test_segments ami_diarization/dev/dev_test_segments_60.txt -s 0 -m 1 --sep .
+python pairing_enrollment_test.py --enrollments chime5_diarization/dev/dev_enrollments_30.txt --test_segments chime5_diarization/dev/dev_test_segments_60.txt -s 0 -m 1 --sep _
+python pairing_enrollment_test.py --enrollments babytrain_diarization/dev/dev_enrollments_30.txt --test_segments babytrain_diarization/dev/dev_test_segments_120.txt
 """
 
 ### Global variables that won't be set up by the user
@@ -214,6 +214,17 @@ def main():
                                        'duration_total_speech': np.float16,
                                        'duration_overlapping_speech': np.float16})
 
+    # Get enr dur and test dur
+    dur_enr = os.path.basename(args.enrollments).split('_')[2].replace('.txt', '')
+    dur_test = os.path.basename(args.test_segments).split('_')[3].replace('.txt', '')
+
+    # Get the respective folds they've been extracted from
+    fold_enr = os.path.basename(args.enrollments).split('_')[0].replace('.txt', '')
+    fold_dur = os.path.basename(args.test_segments).split('_')[0].replace('.txt', '')
+
+    if fold_enr != fold_dur:
+        raise ValueError("The enrollments and the test_segments must have been extracted from the same subset (train/dev/test).")
+
     # Some speakers might have only enrollment because the duration of a test segment is too long (ie. all the
     # files in which the speaker appear are less than the test_segment duration)
     # Some speakers might have only test segments, because they don't talk enough to allow us to build an enrollment
@@ -251,35 +262,35 @@ def main():
 
     # Compute maximal pairing
     trials = maximal_pairing(enrollments, test_segments, babytrain=(mic_idx is None)) # if mic_idx is not provided, consider that we're treating babytrain
-
+    print("Memory usage (trials) :")
     print(trials.memory_usage())
+
     # Write the file containing the maximum number of trials
     folder_output = os.path.dirname(args.enrollments)
-    dur_enr = os.path.basename(args.enrollments).split('_')[1].replace('.txt', '')
-    dur_test = os.path.basename(args.test_segments).split('_')[2].replace('.txt', '')
-    output_path = os.path.join(folder_output, "trials_%s_enr_%s_test_%s.txt" % ('unsampled', dur_enr, dur_test))
+    output_path = os.path.join(folder_output, "%s_trials_%s_enr_%s_test_%s.txt" % (fold_enr, 'unsampled', dur_enr, dur_test))
     write_trials(trials, output_path)
 
     # Subsample
-    # if args.square:
-    #     subsamp = "square"
-    #     trials = square_subsampling(trials, args.nb_trials)
-    # else:
-    #     subsamp = "natural"
-    #     trials = natural_subsampling(trials, args.nb_trials, NB_MIN)
-    #
-    # # Update enrollments.txt with mic and session information + filtered enrollments that we've lost because of the subsampling
-    # enrollments = enrollments.merge(trials, how='inner',
-    #                                 left_on=["speaker", "model_number"],
-    #                                 right_on=["target_speaker", "model_number"], suffixes=('','_y'))
-    # enrollments = enrollments[['speaker', 'model_number', 'filename','onset', 'offset', 'session', 'microphone']]
-    # enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s" % subsamp), header=True,
-    #                    sep="\t", index=False, float_format="%.4f")
-    #
-    # # Write paired test_segments.txt
-    # output_path = os.path.join(folder_output, "trials_%s_enr_%s_test_%s_N_%s.txt" % (subsamp, dur_enr, dur_test, args.nb_trials))
-    # write_trials(trials, output_path)
+    if args.square:
+        subsamp = "square"
+        trials = square_subsampling(trials, args.nb_trials)
+    else:
+        subsamp = "natural"
+        trials = natural_subsampling(trials, args.nb_trials, NB_MIN)
 
+    # Update enrollments.txt with mic and session information + filtered enrollments that we've lost because of the subsampling
+    enrollments = enrollments.merge(trials, how='inner',
+                                    left_on=["speaker", "model_number"],
+                                    right_on=["target_speaker", "model_number"], suffixes=('','_y'))
+    enrollments = enrollments[['speaker', 'model_number', 'filename','onset', 'offset', 'session', 'microphone']]
+    enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s" % subsamp), header=True,
+                       sep="\t", index=False, float_format="%.4f")
+
+    # Write paired test_segments.txt
+    output_path = os.path.join(folder_output, "%s_trials_%s_enr_%s_test_%s_N_%s.txt" % (fold_enr, subsamp, dur_enr, dur_test, args.nb_trials))
+    write_trials(trials, output_path)
+
+    # Personal use (needs to be updated) :
     # for i in range(100,1100,100):
     #     NB_TRIALS = i
     #     subsamp = "square"

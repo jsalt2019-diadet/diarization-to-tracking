@@ -15,7 +15,7 @@ Options:
 Use case:
     python diarization_to_test_segments.py ami_diarization
     python diarization_to_test_segments.py chime5_diarization
-    python diarization_to_test_segments.py babytrain_diarization --bbt
+    python diarization_to_test_segments.py babytrain_diarization --bbt -d 120
 
 Requirements:
     pyannote.database
@@ -138,10 +138,10 @@ def main():
                     for non_target in non_targets:
                         test_segments_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
 
-        with open(os.path.join(DATABASE_PATH, "%s_test_segments_%d.txt" % (fold, DURATION_TEST)), "w") as f:
+        with open(os.path.join(DATABASE_PATH, fold, "%s_test_segments_%d.txt" % (fold, DURATION_TEST)), "w") as f:
             f.write(test_segments_txt[:-1])
 
-        print("%s_test_segments_%d.txt generated in %s" % (fold, DURATION_TEST, DATABASE_PATH))
+        print("%s_test_segments_%d.txt generated in %s" % (fold, DURATION_TEST, os.path.join(DATABASE_PATH, fold)))
 
 
 if __name__ == '__main__':
