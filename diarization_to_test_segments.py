@@ -93,10 +93,10 @@ def main():
     DATABASE_PATH = os.path.join(os.getcwd(), args.path)  # needs to loop through dev and test
     BABYTRAIN = args.bbt
 
-    # Header
-    test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
-
     for fold in ["train", "dev", "test"]:
+        # Header
+        test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
+
         # Extract target and non-target test_segments
         rttm_files = utils.get_rttm(DATABASE_PATH, fold)
 
@@ -137,7 +137,7 @@ def main():
                     # where one of the target speaker is also participating
                     for non_target in non_targets:
                         test_segments_txt += "%s\t%s\t%d\t%d\t%.1f\t%.1f\n" % (non_target, basename, beg, end, 0.0, 0.0)
-
+        print(test_segments_txt[1])
         with open(os.path.join(DATABASE_PATH, fold, "%s_test_segments_%d.txt" % (fold, DURATION_TEST)), "w") as f:
             f.write(test_segments_txt[:-1])
 
