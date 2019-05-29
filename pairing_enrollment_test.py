@@ -283,7 +283,7 @@ def main():
                                     left_on=["speaker", "model_number"],
                                     right_on=["target_speaker", "model_number"], suffixes=('','_y'))
     enrollments = enrollments[['speaker', 'model_number', 'filename','onset', 'offset', 'session', 'microphone']]
-    enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s" % subsamp), header=True,
+    enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s_N_%s" % (subsamp, args.nb_trials)), header=True,
                        sep="\t", index=False, float_format="%.4f")
 
     # Write paired test_segments.txt
