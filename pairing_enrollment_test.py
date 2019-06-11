@@ -11,7 +11,7 @@ python pairing_enrollment_test.py --enrollments babytrain_diarization/dev/dev_en
 """
 
 ### Global variables that won't be set up by the user
-NB_MIN = 10                     # number of minimal trials for the natural subsampling
+NB_MIN = 1                      # number of minimal trials for the natural subsampling
 SEED = np.random.seed(seed=42)  # random seed (for reproducibility)
 
 
@@ -26,6 +26,11 @@ def remove_silence_test(test_segments):
 
     # Keep columns that did not belong to silences dataframe
     test_segments = merged[merged["_merge"] == "right_only"].drop(columns=["_merge", "duration_total_speech_x"])
+
+    # Reorder columns
+    test_segments = test_segments[['target_speaker', 'filename', 'beginning_time', 'end_time',
+       'duration_total_speech', 'duration_overlapping_speech']]
+
     return test_segments
 
 
@@ -50,10 +55,12 @@ def maximal_pairing(enrollments, test_segments, babytrain=False):
     enrollment_agg = enrollments.groupby(["speaker", "model_number"]).apply(
              agg_onset_offset).reset_index()
 
+    # Groupby weirdly introduces NaN ...
+    enrollment_agg = enrollment_agg.dropna(axis=0, how="any")
+
     # Cartesian product between test_segments and enrollments_agg
     trials = test_segments.merge(enrollment_agg, how="left", left_on="target_speaker", right_on="speaker",
                                  suffixes=("_test_seg", "_enrollment"))
-
     trials["beginning_time"] = trials["beginning_time"].astype(np.int32)
     trials["end_time"] = trials["end_time"].astype(np.int32)
     trials["model_number"] = trials["model_number"].astype(np.int64)
@@ -68,6 +75,7 @@ def maximal_pairing(enrollments, test_segments, babytrain=False):
         trials["isContain"] = trials.apply(lambda x: x["session_test_seg"] in str(x["session_enrollment"]).split("&&"), axis=1)
         trials = trials[~trials["isContain"]]
         trials.drop(["isContain"], axis=1, inplace=True)
+
     return trials
 
 
@@ -168,9 +176,9 @@ def square_subsampling(trials, nb_trials):
 def write_trials(trials, output_path):
     # # Choose more explicit column name
     df = trials.drop(["speaker", "filename_enrollment", "session_enrollment", "microphone_enrollment", "on_off"], axis=1)
-    df.columns = ['filename', 'beginning_time', 'end_time', 'target_speaker',
-                       'duration_total_speech', 'duration_overlapping_speech',
-                       'session', 'microphone', 'enrollment_number']
+    df.columns = ["target_speaker", "filename", "beginning_time", "end_time", "duration_total_speech",
+                  "duration_overlapping_speech", "session", "microphone", "enrollment_number"]
+
     df_path = os.path.join(output_path)
     df.to_csv(df_path, header=True, sep="\t", index=False, float_format="%.4f",
                   columns=['target_speaker', 'enrollment_number',
@@ -283,7 +291,7 @@ def main():
                                     left_on=["speaker", "model_number"],
                                     right_on=["target_speaker", "model_number"], suffixes=('','_y'))
     enrollments = enrollments[['speaker', 'model_number', 'filename','onset', 'offset', 'session', 'microphone']]
-    enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s" % subsamp), header=True,
+    enrollments.to_csv(args.enrollments.replace("enrollments", "enrollments_%s_N_%s" % (subsamp, args.nb_trials)), header=True,
                        sep="\t", index=False, float_format="%.4f")
 
     # Write paired test_segments.txt
