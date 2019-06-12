@@ -13,6 +13,7 @@ Options:
                         if True, skip all the speakers whose name does NOT start by !
 
 Use case:
+    python diarization_to_test_segments.py sri_diarization --sri
     python diarization_to_test_segments.py ami_diarization
     python diarization_to_test_segments.py chime5_diarization
     python diarization_to_test_segments.py babytrain_diarization --bbt -d 120
@@ -86,19 +87,28 @@ def main():
 
     parser.add_argument('--bbt', action='store_true', help="Indicates whether the corpora is BabyTrain or not. If true,"
                                                            "skip all the speakers whose name doesn't start by '!'.")
+    parser.add_argument('--sri', action='store_true', help="Indicates whether the corpora is SRI or not.")
     args = parser.parse_args()
 
     # Parameters
     DURATION_TEST = args.duration
     DATABASE_PATH = os.path.join(os.getcwd(), args.path)  # needs to loop through dev and test
     BABYTRAIN = args.bbt
+    SRI = args.sri
 
-    for fold in ["train", "dev", "test"]:
+    folds = ["train", "dev", "test"]
+    if SRI:
+        folds = ["dev", "test"]
+
+    for fold in folds:
         # Header
         test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
 
         # Extract target and non-target test_segments
         rttm_files = utils.get_rttm(DATABASE_PATH, fold)
+        if SRI:
+            # Discarding enrollment files
+            rttm_files = [rttm for rttm in rttm_files if len(rttm.split('-')) != 2]
 
         ## First, get the dictionnary of every friends of every speakers.
         friends_per_speaker = get_friends_per_speaker(rttm_files, BABYTRAIN)
@@ -113,6 +123,7 @@ def main():
                 participants = annotation.labels()
                 if BABYTRAIN:
                     participants = [p for p in participants if p.startswith("!")]
+
                 all_friends = get_friends_of_participants(friends_per_speaker, participants)
                 last_offset = annotation.get_timeline()[-1][1]
 
@@ -123,6 +134,7 @@ def main():
 
                     if BABYTRAIN:
                         targets = [t for t in targets if t.startswith("!")]
+
                     overlapping_chunk = utils.overlapping_annotation(chunk)
                     # A speaker is defined as a target speaker for a chunk c,
                     # when he/she is speaking in c.
@@ -132,6 +144,7 @@ def main():
                         test_segments_txt += "%s\t%s\t%d\t%d\t%.3f\t%.3f\n" % (target, basename, beg, end, tot_speech, overlapping_speech)
 
                     non_targets = list(set(all_friends) - set(targets))
+
                     # A speaker is defined as a non-target speaker for a chunk c,
                     # when he/she is not speaking in c, but speaks somewhere in whatever file
                     # where one of the target speaker is also participating

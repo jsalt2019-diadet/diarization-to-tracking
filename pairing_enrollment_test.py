@@ -5,6 +5,7 @@ import os
 
 """
 Use case :
+python pairing_enrollment_test.py --enrollments sri_diarization/dev/dev_enrollments_filedur.txt --test_segments sri_diarization/dev/dev_test_segments_60.txt -s 2 -m 3 4 --sep - --sri
 python pairing_enrollment_test.py --enrollments ami_diarization/dev/dev_enrollments_30.txt --test_segments ami_diarization/dev/dev_test_segments_60.txt -s 0 -m 1 --sep .
 python pairing_enrollment_test.py --enrollments chime5_diarization/dev/dev_enrollments_30.txt --test_segments chime5_diarization/dev/dev_test_segments_60.txt -s 0 -m 1 --sep _
 python pairing_enrollment_test.py --enrollments babytrain_diarization/dev/dev_enrollments_30.txt --test_segments babytrain_diarization/dev/dev_test_segments_120.txt
@@ -194,7 +195,7 @@ def main():
                         help='''Path to the enrollment .txt files''')
     parser.add_argument('-t', '--test_segments', type=str, required=True,
                         help='''Path to the test_segments .txt files''')
-    parser.add_argument('-m', '--mic_idx', type=int, default=None,
+    parser.add_argument('-m', '--mic_idx', type=int, nargs="+", default=None,
                         help='''Index of the microphone when the filename is separated by --sep''')
     parser.add_argument('-s', '--session_idx', type=int, default=None,
                         help='''Index of the session when the filename is separated by --sep''')
@@ -205,6 +206,8 @@ def main():
     parser.add_argument('--square', action='store_true',
                         help='''If True, performs a square subsampling. 
                         Otherwise, a natural subsampling will be executed.''')
+    parser.add_argument('--sri', action='store_true',
+                        help='''Indicates whether the corpora is SRI or not.''')
     args = parser.parse_args()
 
     # Open files and store data to pandas dataframe
@@ -248,6 +251,7 @@ def main():
     session_idx = args.session_idx
     mic_idx = args.mic_idx
     sep = args.sep
+    SRI = args.sri
 
     test_segments["session"] = test_segments["filename"]
     enrollments["session"] = enrollments["filename"]
@@ -261,12 +265,21 @@ def main():
     enrollments["microphone"] = enrollments["microphone"].astype('category')
 
     if session_idx is not None:
-        test_segments["session"] = test_segments["filename"].str.split(sep, n=1).map(lambda x: x[session_idx])
-        enrollments["session"] = enrollments["filename"].str.split(sep, n=1).map(lambda x: x[session_idx])
+        test_segments["session"] = test_segments["filename"].str.split(sep).map(lambda x: x[session_idx])
+        if SRI:
+            enrollments["session"] = "enrollment"
+        else:
+            enrollments["session"] = enrollments["filename"].str.split(sep).map(lambda x: x[session_idx])
 
     if mic_idx is not None:
-        test_segments["microphone"] = test_segments["filename"].str.split(sep, n=1).map(lambda x: x[mic_idx])
-        enrollments["microphone"] = enrollments["filename"].str.split(sep, n=1).map(lambda x: x[mic_idx])
+        if SRI:
+            # With SRI, mic names are multi-indexed
+            test_segments["microphone"] = test_segments["filename"].str.split(sep).map(lambda x: '-'.join([x[m] for m in mic_idx]))
+            enrollments["microphone"] = "enr_mic"
+        else:
+            mic_idx = mic_idx[0]
+            test_segments["microphone"] = test_segments["filename"].str.split(sep).map(lambda x: x[mic_idx])
+            enrollments["microphone"] = enrollments["filename"].str.split(sep).map(lambda x: x[mic_idx])
 
     # Compute maximal pairing
     trials = maximal_pairing(enrollments, test_segments, babytrain=(mic_idx is None)) # if mic_idx is not provided, consider that we're treating babytrain
