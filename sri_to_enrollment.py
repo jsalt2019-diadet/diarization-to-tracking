@@ -38,7 +38,7 @@ def generate_enrollment(folder_path, fold, min_duration="filedur"):
         with open(rttm) as rttm_data:
             # Should contain only one line
             for line in rttm_data:
-                splitted = line.split('\t')
+                splitted = line.split(' ')
                 onset, duration, speaker = float(splitted[3]), float(splitted[4]), splitted[7]
 
                 if speaker not in model_number.keys():

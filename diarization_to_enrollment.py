@@ -14,7 +14,7 @@ Options:
                         If True, skip the speakers whose name does NOT start by !
 
 Use case:
-    python diarization_to_enrollment.py babytrain_diarization --bbt --cross-file
+    python diarization_to_enrollment.py babytrain_diarization --bbt
     python diarization_to_enrollment.py ami_diarization
     python diarization_to_enrollment.py chime5_diarization
 """
@@ -60,7 +60,7 @@ def generate_enrollment(folder_path, fold, min_duration=30, cross_file=False, ba
             cum_per_speaker[prev_speaker] = [0.0, "", 0]
 
             for line in f:
-                splitted = line.split('\t')
+                splitted = line.split(' ')
                 start, duration, speaker = round(float(splitted[3]), 3), round(float(splitted[4]),3), splitted[7]
                 end = round(start + duration, 3)
 

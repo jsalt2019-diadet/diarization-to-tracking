@@ -6,6 +6,8 @@
 Arguments:
                         folder path containing train, dev and test folders,
                         themselves containing a gold folder containing .rttm files
+                        These folders must contain a file called all_{fold}.uem (so that
+                        we can know the duration of the wav)
 
 Options:
     -d DURATION         duration of a test segment (in seconds) [default: 60]
@@ -16,7 +18,7 @@ Use case:
     python diarization_to_test_segments.py sri_diarization --sri
     python diarization_to_test_segments.py ami_diarization
     python diarization_to_test_segments.py chime5_diarization
-    python diarization_to_test_segments.py babytrain_diarization --bbt -d 120
+    python diarization_to_test_segments.py babytrain_diarization --bbt
 
 Requirements:
     pyannote.database
@@ -27,6 +29,7 @@ import pyannote.database.util as pyda
 from pyannote.core import Segment, Annotation
 import os
 import argparse
+import pandas
 from utils import utils
 
 
@@ -101,6 +104,10 @@ def main():
         folds = ["dev", "test"]
 
     for fold in folds:
+        # Load uem
+        uem_path = os.path.join(DATABASE_PATH, fold, "all_%s.uem" % fold)
+        uem = pandas.read_csv(uem_path, sep=" ", names=["filename", "channel", "beg", "end"])
+
         # Header
         test_segments_txt = "target_speaker\tfilename\tbeginning_time\tend_time\tduration_total_speech\tduration_overlapping_speech\n"
 
@@ -115,6 +122,7 @@ def main():
 
         for rttm in rttm_files:
             basename = os.path.splitext(os.path.basename(rttm))[0]
+            wav_duration = float(uem.loc[uem["filename"] == basename.replace(".rttm", ""), "end"])
             data = pyda.load_rttm(rttm)
 
             if data != {}:
@@ -125,9 +133,8 @@ def main():
                     participants = [p for p in participants if p.startswith("!")]
 
                 all_friends = get_friends_of_participants(friends_per_speaker, participants)
-                last_offset = annotation.get_timeline()[-1][1]
 
-                for end in range(DURATION_TEST, int(last_offset), DURATION_TEST):
+                for end in range(DURATION_TEST, int(wav_duration)+1, DURATION_TEST):
                     beg = end - DURATION_TEST
                     chunk = annotation.crop(Segment(beg, end))
                     targets = chunk.labels()
