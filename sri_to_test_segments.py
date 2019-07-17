@@ -33,13 +33,22 @@ import pandas
 from utils import utils
 
 
-def get_sri_enrolled_speakers(sri_path):
-    folds = ['dev', 'test']
-    speakers = []
-    for fold in folds:
-        fold_speakers = glob.glob(os.path.join(sri_path,fold,'gold/*.rttm'))
-        fold_speakers = [os.path.basename(rttm).split('-')[0] for rttm in fold_speakers if len(os.path.basename(rttm).split('-')) == 2]
-        speakers += fold_speakers
+def get_sri_enrolled_speakers(sri_path, fold):
+    rttm_files = utils.get_rttm(sri_path, fold)
+    valid_path = os.path.join(sri_path, "valid.lst")
+    valid_lst = pandas.read_csv(valid_path, sep="\t", names=["rm_session_mic"])
+    # Discarding enrollment files
+    rttm_files = [rttm for rttm in rttm_files if len(rttm.split('-')) != 2]
+    rttm_files = [rttm for rttm in rttm_files if
+                  '-'.join(os.path.basename(rttm).split('-')[1:3]) + " " +
+                  os.path.basename(rttm).split('-')[3] in valid_lst["rm_session_mic"].values]
+
+    speakers = set()
+    for rttm in rttm_files:
+        with open(rttm) as data:
+            for line in data:
+                splitted = line.split(' ')
+                speakers |= set([splitted[7]])
     return speakers
 
 
@@ -64,9 +73,10 @@ def main():
     DATABASE_PATH = os.path.join(os.getcwd(), args.path)  # needs to loop through dev and test
 
     folds = ["dev", "test"]
-    speakers = get_sri_enrolled_speakers(DATABASE_PATH)
 
     for fold in folds:
+        speakers = get_sri_enrolled_speakers(DATABASE_PATH, fold)
+
         # Load uem
         uem_path = os.path.join(DATABASE_PATH, fold, "diego_cond_%s.uem" % fold)
         uem = pandas.read_csv(uem_path, sep=" ", names=["filename", "channel", "beg", "end"])
